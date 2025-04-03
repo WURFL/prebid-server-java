@@ -29,9 +29,7 @@ public class WURFLEngineInitializer {
 
     public WURFLEngine initWURFLEngine() {
         downloadWurflFile(configProperties);
-        final WURFLEngine engine = initializeEngine(configProperties);
-        setupUpdater(configProperties, engine);
-        return engine;
+        return initializeEngine(configProperties);
     }
 
     static void downloadWurflFile(WURFLDeviceDetectionConfigProperties configProperties) {
@@ -98,15 +96,5 @@ public class WURFLEngineInitializer {
             throw new WURFLModuleConfigurationException(failedCheckMessage);
         }
 
-    }
-
-    static void setupUpdater(WURFLDeviceDetectionConfigProperties configProperties, WURFLEngine engine) {
-        final boolean runUpdater = configProperties.isWurflRunUpdater();
-
-        if (runUpdater) {
-            final WURFLUpdater updater = new WURFLUpdater(engine, configProperties.getWurflSnapshotUrl());
-            updater.setFrequency(Frequency.DAILY);
-            updater.performPeriodicUpdate();
-        }
     }
 }

@@ -12,6 +12,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import io.vertx.core.Vertx;
+import org.prebid.server.execution.file.syncer.FileSyncer;
+import org.prebid.server.spring.config.model.FileSyncerProperties;
+import org.prebid.server.spring.config.model.HttpClientProperties;
+import org.prebid.server.execution.file.FileUtil;
 
 import java.util.List;
 
@@ -23,9 +28,11 @@ import java.util.List;
 @EnableConfigurationProperties(WURFLDeviceDetectionConfigProperties.class)
 public class WURFLDeviceDetectionConfiguration {
 
+    private static final Long DAILY_SYNC_INTERVAL = 86400000L;
+
     @Bean
     public WURFLDeviceDetectionModule wurflDeviceDetectionModule(WURFLDeviceDetectionConfigProperties
-                                                                         configProperties) {
+                                                                         configProperties, Vertx vertx) {
 
         final WURFLEngine wurflEngine = WURFLEngineInitializer.builder()
                 .configProperties(configProperties)
@@ -34,9 +41,38 @@ public class WURFLDeviceDetectionConfiguration {
 
         WURFLService wurflService = new WURFLService(wurflEngine,configProperties);
 
-        // TODO: create and start FileSyncer
+        if(configProperties.isWurflRunUpdater()) {
+            final FileSyncer fileSyncer = createFileSyncer(configProperties, wurflService, vertx);
+            fileSyncer.sync();
+        }
 
         return new WURFLDeviceDetectionModule(List.of(new WURFLDeviceDetectionEntrypointHook(),
                 new WURFLDeviceDetectionRawAuctionRequestHook(wurflService, configProperties)));
     }
+
+    private FileSyncer createFileSyncer(WURFLDeviceDetectionConfigProperties configProperties,
+                                        WURFLService wurflService, Vertx vertx) {
+
+        HttpClientProperties httpProperties = new HttpClientProperties();
+        httpProperties.setConnectTimeoutMs(configProperties.getUpdateConnTimeoutMs());
+        //httpProperties.setMaxRedirects(3); // CHECK: maybe not needed
+
+        FileSyncerProperties fileSyncerProperties = new FileSyncerProperties();
+        fileSyncerProperties.setCheckSize(true);
+        fileSyncerProperties.setDownloadUrl(configProperties.getWurflSnapshotUrl());
+        fileSyncerProperties.setTmpFilepath(configProperties.getWurflFileDirPath() + "wurfl.zip");
+        fileSyncerProperties.setTimeoutMs((long)configProperties.getUpdateConnTimeoutMs());
+        fileSyncerProperties.setUpdateIntervalMs(DAILY_SYNC_INTERVAL);
+        fileSyncerProperties.setRetryCount(configProperties.getUpdateRetries());
+        fileSyncerProperties.setRetryIntervalMs(configProperties.getRetryIntervalMs());
+        fileSyncerProperties.setHttpClient(httpProperties);
+
+        return FileUtil.fileSyncerFor(
+                wurflService,
+                fileSyncerProperties,
+                vertx);
+
+
+    }
+
 }
