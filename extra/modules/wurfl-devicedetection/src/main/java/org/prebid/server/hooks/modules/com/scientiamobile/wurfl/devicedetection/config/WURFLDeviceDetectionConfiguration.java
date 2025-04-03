@@ -5,6 +5,7 @@ import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.
 import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.v1.WURFLDeviceDetectionEntrypointHook;
 import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.v1.WURFLDeviceDetectionModule;
 import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.v1.WURFLDeviceDetectionRawAuctionRequestHook;
+import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.v1.WURFLService;
 import org.prebid.server.spring.env.YamlPropertySourceFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +32,11 @@ public class WURFLDeviceDetectionConfiguration {
                 .build().initWURFLEngine();
         wurflEngine.load();
 
+        WURFLService wurflService = new WURFLService(wurflEngine,configProperties);
+
+        // TODO: create and start FileSyncer
+
         return new WURFLDeviceDetectionModule(List.of(new WURFLDeviceDetectionEntrypointHook(),
-                new WURFLDeviceDetectionRawAuctionRequestHook(wurflEngine, configProperties)));
+                new WURFLDeviceDetectionRawAuctionRequestHook(wurflService, configProperties)));
     }
 }
