@@ -1,18 +1,26 @@
 package org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.v1;
 
 import com.scientiamobile.wurfl.core.Device;
+import com.scientiamobile.wurfl.core.GeneralWURFLEngine;
 import com.scientiamobile.wurfl.core.WURFLEngine;
 import io.vertx.core.Future;
 import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.config.WURFLDeviceDetectionConfigProperties;
 
 import org.prebid.server.execution.file.FileProcessor;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.prebid.server.hooks.modules.com.scientiamobile.wurfl.devicedetection.model.WURFLEngineInitializer;
 
 @Slf4j
 public class WURFLService implements FileProcessor {
+
 
     private WURFLEngine wurflEngine;
     private WURFLDeviceDetectionConfigProperties configProperties;
@@ -23,7 +31,20 @@ public class WURFLService implements FileProcessor {
     }
 
     public Future<?> setDataPath(String dataFilePath){
+
         log.info("setDataPath invoked");
+        try {
+            WURFLEngine e = new GeneralWURFLEngine(dataFilePath);
+            e.load();
+            String fileName = WURFLEngineInitializer.extractWURFLFileName(configProperties.getWurflSnapshotUrl());
+            Path dir = Paths.get(configProperties.getWurflFileDirPath());
+            Path file = dir.resolve(fileName);
+            Files.move(Paths.get(dataFilePath), file, StandardCopyOption.REPLACE_EXISTING);
+            wurflEngine.reload(file.toAbsolutePath().toString());
+        } catch (Exception e) {
+            return Future.failedFuture(e);
+        }
+
         return Future.succeededFuture();
     }
 

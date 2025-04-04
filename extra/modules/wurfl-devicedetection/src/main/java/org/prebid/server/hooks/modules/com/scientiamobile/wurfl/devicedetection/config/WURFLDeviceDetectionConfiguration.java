@@ -17,7 +17,7 @@ import org.prebid.server.execution.file.syncer.FileSyncer;
 import org.prebid.server.spring.config.model.FileSyncerProperties;
 import org.prebid.server.spring.config.model.HttpClientProperties;
 import org.prebid.server.execution.file.FileUtil;
-
+import java.nio.file.Path;
 import java.util.List;
 
 @ConditionalOnProperty(prefix = "hooks." + WURFLDeviceDetectionModule.CODE, name = "enabled", havingValue = "true")
@@ -53,6 +53,17 @@ public class WURFLDeviceDetectionConfiguration {
     private FileSyncer createFileSyncer(WURFLDeviceDetectionConfigProperties configProperties,
                                         WURFLService wurflService, Vertx vertx) {
 
+        String snapshotURL = configProperties.getWurflSnapshotUrl();
+        String downloadPath = configProperties.getWurflFileDirPath();
+        String tempPath = downloadPath;
+        if(snapshotURL.endsWith(".xml.gz")) {
+            downloadPath = Path.of(downloadPath, "new_wurfl.xml.gz").toString();
+            tempPath = Path.of(tempPath, "temp_wurfl.xml.gz").toString();
+        } else {
+            downloadPath = Path.of(downloadPath, "new_wurfl.zip").toString();
+            tempPath = Path.of(tempPath, "temp_wurfl.zip").toString();
+        }
+
         HttpClientProperties httpProperties = new HttpClientProperties();
         httpProperties.setConnectTimeoutMs(configProperties.getUpdateConnTimeoutMs());
         //httpProperties.setMaxRedirects(3); // CHECK: maybe not needed
@@ -60,7 +71,8 @@ public class WURFLDeviceDetectionConfiguration {
         FileSyncerProperties fileSyncerProperties = new FileSyncerProperties();
         fileSyncerProperties.setCheckSize(true);
         fileSyncerProperties.setDownloadUrl(configProperties.getWurflSnapshotUrl());
-        fileSyncerProperties.setTmpFilepath(configProperties.getWurflFileDirPath() + "wurfl.zip");
+        fileSyncerProperties.setSaveFilepath(downloadPath);
+        fileSyncerProperties.setTmpFilepath(tempPath);
         fileSyncerProperties.setTimeoutMs((long)configProperties.getUpdateConnTimeoutMs());
         fileSyncerProperties.setUpdateIntervalMs(DAILY_SYNC_INTERVAL);
         fileSyncerProperties.setRetryCount(configProperties.getUpdateRetries());
@@ -71,8 +83,6 @@ public class WURFLDeviceDetectionConfiguration {
                 wurflService,
                 fileSyncerProperties,
                 vertx);
-
-
     }
 
 }

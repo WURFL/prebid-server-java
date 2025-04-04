@@ -4,8 +4,6 @@ import com.scientiamobile.wurfl.core.GeneralWURFLEngine;
 import com.scientiamobile.wurfl.core.WURFLEngine;
 import com.scientiamobile.wurfl.core.cache.LRUMapCacheProvider;
 import com.scientiamobile.wurfl.core.cache.NullCacheProvider;
-import com.scientiamobile.wurfl.core.updater.Frequency;
-import com.scientiamobile.wurfl.core.updater.WURFLUpdater;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +58,7 @@ public class WURFLEngineInitializer {
         return engine;
     }
 
-    private static String extractWURFLFileName(String wurflSnapshotUrl) {
+    public static String extractWURFLFileName(String wurflSnapshotUrl) {
 
         try {
             final URI uri = new URI(wurflSnapshotUrl);
