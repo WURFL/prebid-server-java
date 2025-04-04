@@ -66,7 +66,7 @@ public class WURFLDeviceDetectionConfiguration {
 
         HttpClientProperties httpProperties = new HttpClientProperties();
         httpProperties.setConnectTimeoutMs(configProperties.getUpdateConnTimeoutMs());
-        //httpProperties.setMaxRedirects(3); // CHECK: maybe not needed
+        httpProperties.setMaxRedirects(1);
 
         FileSyncerProperties fileSyncerProperties = new FileSyncerProperties();
         fileSyncerProperties.setCheckSize(true);
