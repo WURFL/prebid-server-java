@@ -17,6 +17,7 @@ import org.prebid.server.execution.file.syncer.FileSyncer;
 import org.prebid.server.spring.config.model.FileSyncerProperties;
 import org.prebid.server.spring.config.model.HttpClientProperties;
 import org.prebid.server.execution.file.FileUtil;
+
 import java.nio.file.Path;
 import java.util.List;
 
@@ -39,9 +40,9 @@ public class WURFLDeviceDetectionConfiguration {
                 .build().initWURFLEngine();
         wurflEngine.load();
 
-        WURFLService wurflService = new WURFLService(wurflEngine,configProperties);
+        final WURFLService wurflService = new WURFLService(wurflEngine, configProperties);
 
-        if(configProperties.isWurflRunUpdater()) {
+        if (configProperties.isWurflRunUpdater()) {
             final FileSyncer fileSyncer = createFileSyncer(configProperties, wurflService, vertx);
             fileSyncer.sync();
         }
@@ -53,10 +54,10 @@ public class WURFLDeviceDetectionConfiguration {
     private FileSyncer createFileSyncer(WURFLDeviceDetectionConfigProperties configProperties,
                                         WURFLService wurflService, Vertx vertx) {
 
-        String snapshotURL = configProperties.getWurflSnapshotUrl();
+        final String snapshotURL = configProperties.getWurflSnapshotUrl();
         String downloadPath = configProperties.getWurflFileDirPath();
         String tempPath = downloadPath;
-        if(snapshotURL.endsWith(".xml.gz")) {
+        if (snapshotURL.endsWith(".xml.gz")) {
             downloadPath = Path.of(downloadPath, "new_wurfl.xml.gz").toString();
             tempPath = Path.of(tempPath, "temp_wurfl.xml.gz").toString();
         } else {
@@ -64,16 +65,16 @@ public class WURFLDeviceDetectionConfiguration {
             tempPath = Path.of(tempPath, "temp_wurfl.zip").toString();
         }
 
-        HttpClientProperties httpProperties = new HttpClientProperties();
+        final HttpClientProperties httpProperties = new HttpClientProperties();
         httpProperties.setConnectTimeoutMs(configProperties.getUpdateConnTimeoutMs());
         httpProperties.setMaxRedirects(1);
 
-        FileSyncerProperties fileSyncerProperties = new FileSyncerProperties();
+        final FileSyncerProperties fileSyncerProperties = new FileSyncerProperties();
         fileSyncerProperties.setCheckSize(true);
         fileSyncerProperties.setDownloadUrl(configProperties.getWurflSnapshotUrl());
         fileSyncerProperties.setSaveFilepath(downloadPath);
         fileSyncerProperties.setTmpFilepath(tempPath);
-        fileSyncerProperties.setTimeoutMs((long)configProperties.getUpdateConnTimeoutMs());
+        fileSyncerProperties.setTimeoutMs((long) configProperties.getUpdateConnTimeoutMs());
         fileSyncerProperties.setUpdateIntervalMs(DAILY_SYNC_INTERVAL);
         fileSyncerProperties.setRetryCount(configProperties.getUpdateRetries());
         fileSyncerProperties.setRetryIntervalMs(configProperties.getRetryIntervalMs());
