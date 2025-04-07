@@ -54,21 +54,14 @@ public class WURFLDeviceDetectionConfiguration {
 
     private FileSyncer createFileSyncer(WURFLDeviceDetectionConfigProperties configProperties,
                                         WURFLService wurflService, Vertx vertx) {
+        final FileSyncerProperties fileSyncerProperties = createFileSyncerProperties(configProperties);
+        return FileUtil.fileSyncerFor(wurflService, fileSyncerProperties, vertx);
+    }
 
-        final String snapshotURL = configProperties.getWurflSnapshotUrl();
-        String downloadPath = configProperties.getWurflFileDirPath();
-        String tempPath = downloadPath;
-        if (snapshotURL.endsWith(".xml.gz")) {
-            downloadPath = Path.of(downloadPath, "new_wurfl.xml.gz").toString();
-            tempPath = Path.of(tempPath, "temp_wurfl.xml.gz").toString();
-        } else {
-            downloadPath = Path.of(downloadPath, "new_wurfl.zip").toString();
-            tempPath = Path.of(tempPath, "temp_wurfl.zip").toString();
-        }
-
-        final HttpClientProperties httpProperties = new HttpClientProperties();
-        httpProperties.setConnectTimeoutMs(configProperties.getUpdateConnTimeoutMs());
-        httpProperties.setMaxRedirects(1);
+    private FileSyncerProperties createFileSyncerProperties(WURFLDeviceDetectionConfigProperties configProperties) {
+        final String downloadPath = createDownloadPath(configProperties);
+        final String tempPath = createTempPath(configProperties);
+        final HttpClientProperties httpProperties = createHttpProperties(configProperties);
 
         final FileSyncerProperties fileSyncerProperties = new FileSyncerProperties();
         fileSyncerProperties.setCheckSize(true);
@@ -81,10 +74,29 @@ public class WURFLDeviceDetectionConfiguration {
         fileSyncerProperties.setRetryIntervalMs(configProperties.getRetryIntervalMs());
         fileSyncerProperties.setHttpClient(httpProperties);
 
-        return FileUtil.fileSyncerFor(
-                wurflService,
-                fileSyncerProperties,
-                vertx);
+        return fileSyncerProperties;
     }
 
+    private String createDownloadPath(WURFLDeviceDetectionConfigProperties configProperties) {
+        final String basePath = configProperties.getWurflFileDirPath();
+        final String fileName = configProperties.getWurflSnapshotUrl().endsWith(".xml.gz")
+                ? "new_wurfl.xml.gz"
+                : "new_wurfl.zip";
+        return Path.of(basePath, fileName).toString();
+    }
+
+    private String createTempPath(WURFLDeviceDetectionConfigProperties configProperties) {
+        final String basePath = configProperties.getWurflFileDirPath();
+        final String fileName = configProperties.getWurflSnapshotUrl().endsWith(".xml.gz")
+                ? "temp_wurfl.xml.gz"
+                : "temp_wurfl.zip";
+        return Path.of(basePath, fileName).toString();
+    }
+
+    private HttpClientProperties createHttpProperties(WURFLDeviceDetectionConfigProperties configProperties) {
+        final HttpClientProperties httpProperties = new HttpClientProperties();
+        httpProperties.setConnectTimeoutMs(configProperties.getUpdateConnTimeoutMs());
+        httpProperties.setMaxRedirects(1);
+        return httpProperties;
+    }
 }
