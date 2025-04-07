@@ -30,7 +30,7 @@ public class WURFLServiceTest {
     @Mock(strictness = LENIENT)
     private WURFLEngine wurflEngine;
 
-    @Mock
+    @Mock(strictness = LENIENT)
     private WURFLDeviceDetectionConfigProperties configProperties;
 
     private WURFLService wurflService;

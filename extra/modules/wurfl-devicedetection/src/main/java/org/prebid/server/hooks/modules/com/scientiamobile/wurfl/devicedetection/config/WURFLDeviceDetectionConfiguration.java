@@ -44,7 +44,8 @@ public class WURFLDeviceDetectionConfiguration {
 
         if (configProperties.isWurflRunUpdater()) {
             final FileSyncer fileSyncer = createFileSyncer(configProperties, wurflService, vertx);
-            fileSyncer.sync();
+            // Update process via file syncer starts with a delay because wurfl file has just been downloaded
+            vertx.setTimer(DAILY_SYNC_INTERVAL, ignored -> fileSyncer.sync());
         }
 
         return new WURFLDeviceDetectionModule(List.of(new WURFLDeviceDetectionEntrypointHook(),
