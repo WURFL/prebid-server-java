@@ -1,5 +1,6 @@
 package org.prebid.server.functional.testcontainers
 
+import org.testcontainers.containers.InfluxDBContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 
@@ -38,8 +39,7 @@ LIMIT 1
             "settings.database.account-query"            : DB_ACCOUNT_QUERY,
             "settings.database.stored-requests-query"    : "SELECT accountId, reqId, requestData, 'request' as dataType FROM stored_requests WHERE reqId IN (%REQUEST_ID_LIST%) UNION ALL SELECT accountId, impId, impData, 'imp' as dataType FROM stored_imps WHERE impId IN (%IMP_ID_LIST%)",
             "settings.database.amp-stored-requests-query": "SELECT accountId, reqId, requestData, 'request' as dataType FROM stored_requests WHERE reqId IN (%REQUEST_ID_LIST%)",
-            "settings.database.stored-responses-query"   : "SELECT resId, COALESCE(storedAuctionResponse, storedBidResponse) as responseData FROM stored_responses WHERE resId IN (%RESPONSE_ID_LIST%)",
-            'settings.database.profiles-query'           : "SELECT accountId, profileId, profile, mergePrecedence, type FROM profiles WHERE profileId in (%REQUEST_ID_LIST%, %IMP_ID_LIST%)"
+            "settings.database.stored-responses-query"   : "SELECT resId, COALESCE(storedAuctionResponse, storedBidResponse) as responseData FROM stored_responses WHERE resId IN (%RESPONSE_ID_LIST%)"
     ].asImmutable()
 
     static Map<String, String> getPubstackAnalyticsConfig(String scopeId) {
@@ -101,7 +101,6 @@ LIMIT 1
          "settings.database.idle-connection-timeout": "300"
         ].asImmutable()
     }
-
     static Map<String, String> getPostgreSqlConfig(PostgreSQLContainer postgres = Dependencies.postgresqlContainer) {
         ["settings.database.type"                   : "postgres",
          "settings.database.host"                   : postgres.getNetworkAliases().get(0),
@@ -144,6 +143,10 @@ LIMIT 1
          "currency-converter.external-rates.url"               : "$networkServiceContainer.rootUri/currency".toString(),
          "currency-converter.external-rates.default-timeout-ms": "4000",
          "currency-converter.external-rates.refresh-period-ms" : "900000"]
+    }
+
+    static Map<String, String> getTargetingConfig() {
+        ["settings.targeting.truncate-attr-chars": '255']
     }
 
     private PbsConfig() {}

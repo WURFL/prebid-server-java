@@ -1,5 +1,6 @@
 package org.prebid.server.hooks.modules.liveintent.omni.channel.identity.config;
 
+import org.prebid.server.auction.privacy.enforcement.mask.UserFpdActivityMask;
 import org.prebid.server.hooks.modules.liveintent.omni.channel.identity.model.config.LiveIntentOmniChannelProperties;
 import org.prebid.server.hooks.modules.liveintent.omni.channel.identity.v1.LiveIntentOmniChannelIdentityModule;
 import org.prebid.server.hooks.modules.liveintent.omni.channel.identity.v1.hooks.LiveIntentOmniChannelIdentityProcessedAuctionRequestHook;
@@ -23,19 +24,20 @@ public class LiveIntentOmniChannelIdentityConfiguration {
 
     @Bean
     @ConfigurationProperties(prefix = "hooks.modules." + LiveIntentOmniChannelIdentityModule.CODE)
-    LiveIntentOmniChannelProperties properties() {
+    LiveIntentOmniChannelProperties liveIntentOmniChannelProperties() {
         return new LiveIntentOmniChannelProperties();
     }
 
     @Bean
-    Module liveIntentOmniChannelIdentityModule(LiveIntentOmniChannelProperties properties,
+    Module liveIntentOmniChannelIdentityModule(LiveIntentOmniChannelProperties liveIntentOmniChannelProperties,
                                                JacksonMapper mapper,
+                                               UserFpdActivityMask userFpdActivityMask,
                                                HttpClient httpClient,
                                                @Value("${logging.sampling-rate:0.01}") double logSamplingRate) {
 
         final LiveIntentOmniChannelIdentityProcessedAuctionRequestHook hook =
                 new LiveIntentOmniChannelIdentityProcessedAuctionRequestHook(
-                        properties, mapper, httpClient, logSamplingRate);
+                        liveIntentOmniChannelProperties, userFpdActivityMask, mapper, httpClient, logSamplingRate);
 
         return new LiveIntentOmniChannelIdentityModule(Collections.singleton(hook));
     }
